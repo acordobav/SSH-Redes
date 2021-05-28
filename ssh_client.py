@@ -91,3 +91,17 @@ def download_file(remote_filepath, local_filepath):
         return 1
 
     return 0
+
+
+"""
+Close SSH connection
+return: 0 -> no problems
+        1 -> error
+"""
+def close():
+    global ssh_client
+    try:
+        ssh_client.close()
+        return 0
+    except:
+        return 1
