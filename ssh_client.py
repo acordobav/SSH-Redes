@@ -105,3 +105,12 @@ def close():
         return 0
     except:
         return 1
+
+
+"""
+connect("52.171.60.196")
+upload_file("./prueba.txt", "./prueba.txt")
+filename = "prueba.txt"
+exec_command("python3 entity_recognition.py " + filename)
+download_file("./resultado.txt", "./resultado.txt")
+"""

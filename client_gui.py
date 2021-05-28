@@ -2,10 +2,8 @@ import sys
 from typing import AsyncIterable
 import pygame
 import subprocess
+import ssh_client
 
-command = "echo Hello World"
-result = subprocess.check_output(command, shell=True)
-print(result)
 
 red = (255, 0, 0)
 blue = (0, 0, 255)
@@ -17,7 +15,7 @@ orange = (255, 128, 0)
 sky = (0, 255, 255)
 
 windowWidth = 800
-windowHeight = 900
+windowHeight = 700
 
 ipTextX = 25
 ipTextY = 25
@@ -58,7 +56,7 @@ class GUI:
         self.actualText = 1
         self.ipAdress = ""
         self.filePath = ""
-        self.output = ""
+        self.output = [""]
 
 
 
@@ -90,11 +88,41 @@ class GUI:
 
                     if connectButtonPosX and connectButtonPosY:
                         #Connect function
-                        self.output = "Connecting..."
+                        self.output = [""]
+                        result = ssh_client.connect(self.ipAdress)
+                        if result == 0:
+                            self.output.append("Connection established!")
+                        elif result == 1:
+                            self.output.append("Please copy key file")
+                        else:
+                            self.output.append("Couldn't connect to the server")
+
+
 
                     elif analyzeButtonPosX and analyzeButtonPosY:
-                        #Analyze function
-                        self.output = "Analyzing..."
+                        # File upload
+                        upload = ssh_client.upload_file(self.filePath, "./text.txt")
+                        if upload == 0:
+                            self.output.append("File uploaded")
+                        else:
+                            self.output.append("Error uploading")
+
+                        # File analysis
+                        exec = ssh_client.exec_command("python3 entity_recognition.py text.txt")
+                        if exec == 1:
+                            self.output.append("Error analyzing file")
+                        else:
+                            self.output.append("Analysis completed")
+                        
+                        # Result download
+                        download = ssh_client.download_file("./resultado.txt", "./resultado.txt")
+                        if download == 1:
+                            self.output.append("Error downloading the file")
+                        else:    
+                            self.output.append("File downloaded")
+                            self.output.append("Result stored in resultado.txt")
+
+                        
 
                 elif event.type == pygame.KEYDOWN:
 
@@ -141,9 +169,9 @@ class GUI:
         self.gameWindow.blit(self.buttonText.render("ANALYZE", True, black), (analyzeButtonX + 10, analyzeButtonY + 7))
 
     def drawOutputText(self):
-
         self.gameWindow.blit(self.text.render("Output: ", True, sky), (outputTextX, outputTextY))
-        self.gameWindow.blit(self.text.render(self.output, True, white), (outputTextX, outputTextY + 40))
+        for i in range(len(self.output)):
+            self.gameWindow.blit(self.text.render(self.output[i], True, white), (outputTextX, outputTextY + i*40))
 
     def handleNumericKeyboard(self, event):
 
@@ -251,3 +279,7 @@ class GUI:
             self.ipAdress = text
         elif self.actualText == 2:
             self.filePath = text
+
+if __name__ == "__main__":
+    gui = GUI()
+    gui.startGUI()
