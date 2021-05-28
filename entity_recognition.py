@@ -1,3 +1,4 @@
+import sys
 from azure.ai.textanalytics import TextAnalyticsClient
 from azure.core.credentials import AzureKeyCredential
 
@@ -14,10 +15,12 @@ def authenticate_client():
 def entity_recognition(client, documents):
 
     result = client.recognize_entities(documents = documents)[0]
-    print ("Named Entities:")
+    f = open("resultado.txt", "w")
     for entity in result.entities:
         if entity.category == "Person":
-            print(entity.text + "\n")
+            f.write(entity.text + "\n")
+    f.close()
+    print("Success: File analyzed")
 
 def analyze_file(filepath):
 
@@ -28,6 +31,16 @@ def analyze_file(filepath):
         documents = []
         documents.append(content)
         entity_recognition(client, documents)
+    
+def main():
+    args = sys.argv[1:]
+    if len(args) > 0:
+        try:
+            open(args[0])
+            analyze_file(args[0])
+        except IOError:
+            print("Error: File not accesible")
+    else:
+        print("Error: Arguments not accesible")
 
-analyze_file("prueba.txt")
-
+main()
